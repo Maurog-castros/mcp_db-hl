@@ -2,7 +2,7 @@ MCP para Base de Datos MySQL / MariaDB
 
 
 
-Permitiría que Fede o un agente IA consulte datos operativos de HL-Go sin tocar directamente el código PHP.
+Permitiría que agente IA consulte datos operativos de HL-Go sin tocar directamente el código PHP.
 
 Casos útiles:
 
