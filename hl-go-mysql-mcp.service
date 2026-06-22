@@ -1,0 +1,22 @@
+[Unit]
+Description=HL-Go MySQL MCP Server (read-only)
+After=network.target mysql.service mariadb.service
+Wants=mysql.service mariadb.service
+
+[Service]
+Type=simple
+User=hl-mcp
+Group=hl-mcp
+WorkingDirectory=/opt/hl-go-mysql-mcp
+EnvironmentFile=/opt/hl-go-mysql-mcp/.env
+ExecStart=/usr/bin/node /opt/hl-go-mysql-mcp/dist/index.js
+Restart=always
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/hl-go-mysql-mcp/logs
+
+[Install]
+WantedBy=multi-user.target
