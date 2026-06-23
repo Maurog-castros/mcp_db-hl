@@ -1,4 +1,5 @@
 import { startMcpServer } from './mcp/server.js';
+import { sanitizeErrorMessage } from './utils/sanitize.js';
 
 async function main(): Promise<void> {
   if (process.argv.includes('--inspect-schema')) {
@@ -14,7 +15,7 @@ async function main(): Promise<void> {
 main().catch((error) => {
   process.stderr.write(
     JSON.stringify({
-      error: error instanceof Error ? error.message : 'Failed to start MCP server',
+      error: sanitizeErrorMessage(error),
     }) + '\n',
   );
   process.exit(1);

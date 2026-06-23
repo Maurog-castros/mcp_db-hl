@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { getEnv } from '../config/env.js';
-import { clampLimit } from '../utils/sanitize.js';
+import { clampLimit, sanitizeErrorMessage } from '../utils/sanitize.js';
 
 export function createLimitSchema(defaultLimit: number) {
   return z
@@ -40,9 +40,28 @@ export function toolTextResult(data: unknown): { content: Array<{ type: 'text'; 
   };
 }
 
+export function formatToolError(error: unknown): string {
+  if (error instanceof z.ZodError) {
+    return error.errors.map((e) => e.message).join('; ');
+  }
+  return sanitizeErrorMessage(error);
+}
+
 export function toolErrorResult(message: string): { content: Array<{ type: 'text'; text: string }>; isError: true } {
   return {
     content: [{ type: 'text', text: JSON.stringify({ success: false, error: message }) }],
     isError: true,
   };
 }
+
+export const agencyNameSchema = z
+  .string()
+  .min(2)
+  .max(80)
+  .regex(/^[A-Za-z0-9\s\-_\.&,áéíóúÁÉÍÓÚñÑ]+$/, 'agencyName contains invalid characters');
+
+export const statusSchema = z
+  .string()
+  .min(1)
+  .max(50)
+  .regex(/^[A-Za-z0-9\s\-_\.áéíóúÁÉÍÓÚñÑ]+$/, 'status contains invalid characters');

@@ -26,6 +26,10 @@ import { sanitizeRows } from '../utils/sanitize.js';
 export class LogisticsReadRepository {
   private schema: SchemaMap | null = null;
 
+  private rowCap(fallback: number): number {
+    return Math.min(fallback, getEnv().DB_MAX_ROWS);
+  }
+
   async init(): Promise<SchemaMap> {
     const env = getEnv();
     this.schema = await inspectSchema(env.DB_NAME);
@@ -284,8 +288,8 @@ export class LogisticsReadRepository {
       `SELECT ${qn(idCol)} AS id_bl, ${qn(numCol)} AS numero_bl
        FROM ${qn(blTable.physical)}
        WHERE ${qn(numCol)} LIKE :pattern
-       LIMIT 5`,
-      { pattern: `%${blNumber}%` },
+       LIMIT :maxRows`,
+      { pattern: `%${blNumber}%`, maxRows: this.rowCap(5) },
     );
 
     if (blRows.length === 0) {
@@ -361,8 +365,8 @@ export class LogisticsReadRepository {
            INNER JOIN ${qn(tiposDocTable.physical)} td
              ON a.${qn(tipoDocIdCol)} = td.${qn(col(tiposDocTable, 'id')!)}
            WHERE c.${qn(blIdOnCont)} = :blId
-           LIMIT 200`,
-          { blId },
+           LIMIT :maxRows`,
+          { blId, maxRows: this.rowCap(200) },
         );
 
         for (const doc of docRows) {
@@ -472,8 +476,8 @@ export class LogisticsReadRepository {
            INNER JOIN ${qn(contTableObs.physical)} c ON o.${qn(contenedorIdObs)} = c.${qn(col(contTableObs, 'id')!)}
            WHERE c.${qn(col(contTableObs, 'bl_id')!)} = :blId
            ORDER BY o.${qn(col(obsTable, 'id') ?? 'observacion_id')} DESC
-           LIMIT 5`,
-          { blId },
+           LIMIT :maxRows`,
+          { blId, maxRows: this.rowCap(5) },
         );
         const obsTexts = obsRows.map((r) => String(r.texto)).filter(Boolean);
         if (obsTexts.length > 0) {
@@ -967,8 +971,8 @@ export class LogisticsReadRepository {
     let params: Record<string, unknown>;
 
     if (blId != null) {
-      sql = `SELECT ${qn(contNumCol)} AS numero FROM ${qn(contTable.physical)} WHERE ${qn(blIdOnCont)} = :blId LIMIT 50`;
-      params = { blId };
+      sql = `SELECT ${qn(contNumCol)} AS numero FROM ${qn(contTable.physical)} WHERE ${qn(blIdOnCont)} = :blId LIMIT :maxRows`;
+      params = { blId, maxRows: this.rowCap(50) };
     } else if (blTable?.physical) {
       const blNumCol = col(blTable, 'numero');
       const blIdCol = col(blTable, 'id');
@@ -976,8 +980,8 @@ export class LogisticsReadRepository {
       sql = `SELECT c.${qn(contNumCol)} AS numero
              FROM ${qn(contTable.physical)} c
              INNER JOIN ${qn(blTable.physical)} b ON c.${qn(blIdOnCont)} = b.${qn(blIdCol)}
-             WHERE b.${qn(blNumCol)} = :blNumber LIMIT 50`;
-      params = { blNumber };
+             WHERE b.${qn(blNumCol)} = :blNumber LIMIT :maxRows`;
+      params = { blNumber, maxRows: this.rowCap(50) };
     } else {
       return [];
     }

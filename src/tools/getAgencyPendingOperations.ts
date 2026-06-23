@@ -1,10 +1,10 @@
 import { z } from 'zod';
 import { LogisticsReadRepository } from '../repositories/LogisticsReadRepository.js';
-import { createLimitSchema, toolErrorResult, toolTextResult } from './common.js';
+import { agencyNameSchema, createLimitSchema, formatToolError, toolErrorResult, toolTextResult } from './common.js';
 
 const inputSchema = z.object({
   agencyId: z.number().int().positive().optional(),
-  agencyName: z.string().min(2).max(80).optional(),
+  agencyName: agencyNameSchema.optional(),
   limit: createLimitSchema(50),
 });
 
@@ -33,10 +33,7 @@ export function registerGetAgencyPendingOperations(repo: LogisticsReadRepository
       );
       return toolTextResult({ success: true, count: rows.length, data: rows, schemaNotes: notes });
     } catch (error) {
-      const message = error instanceof z.ZodError
-        ? error.errors.map((e) => e.message).join('; ')
-        : error instanceof Error ? error.message : 'Unknown error';
-      return toolErrorResult(message);
+      return toolErrorResult(formatToolError(error));
     }
   };
 }

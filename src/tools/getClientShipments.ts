@@ -1,11 +1,11 @@
 import { z } from 'zod';
 import { LogisticsReadRepository } from '../repositories/LogisticsReadRepository.js';
-import { clientQuerySchema, createLimitSchema, dateSchema, toolErrorResult, toolTextResult } from './common.js';
+import { clientQuerySchema, createLimitSchema, dateSchema, formatToolError, statusSchema, toolErrorResult, toolTextResult } from './common.js';
 
 const inputSchema = z
   .object({
     clientQuery: clientQuerySchema,
-    status: z.string().min(1).max(50).optional(),
+    status: statusSchema.optional(),
     fromDate: dateSchema.optional(),
     toDate: dateSchema.optional(),
     limit: createLimitSchema(50),
@@ -47,10 +47,7 @@ export function registerGetClientShipments(repo: LogisticsReadRepository) {
       );
       return toolTextResult({ success: true, count: rows.length, data: rows, schemaNotes: notes });
     } catch (error) {
-      const message = error instanceof z.ZodError
-        ? error.errors.map((e) => e.message).join('; ')
-        : error instanceof Error ? error.message : 'Unknown error';
-      return toolErrorResult(message);
+      return toolErrorResult(formatToolError(error));
     }
   };
 }

@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { LogisticsReadRepository } from '../repositories/LogisticsReadRepository.js';
-import { blNumberSchema, createLimitSchema, toolErrorResult, toolTextResult } from './common.js';
+import { blNumberSchema, createLimitSchema, formatToolError, toolErrorResult, toolTextResult } from './common.js';
 
 const inputSchema = z.object({
   blNumber: blNumberSchema,
@@ -28,10 +28,7 @@ export function registerFindBlByNumber(repo: LogisticsReadRepository) {
       const { rows, notes } = await repo.findBlByNumber(input.blNumber, input.limit);
       return toolTextResult({ success: true, count: rows.length, data: rows, schemaNotes: notes });
     } catch (error) {
-      const message = error instanceof z.ZodError
-        ? error.errors.map((e) => e.message).join('; ')
-        : error instanceof Error ? error.message : 'Unknown error';
-      return toolErrorResult(message);
+      return toolErrorResult(formatToolError(error));
     }
   };
 }

@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { LogisticsReadRepository } from '../repositories/LogisticsReadRepository.js';
 import { RiskService } from '../services/RiskService.js';
 import { addDays, today } from '../utils/date.js';
-import { createLimitSchema, dateSchema, toolErrorResult, toolTextResult } from './common.js';
+import { createLimitSchema, dateSchema, formatToolError, toolErrorResult, toolTextResult } from './common.js';
 
 const inputSchema = z
   .object({
@@ -66,10 +66,7 @@ export function registerGetEtaRiskReport(repo: LogisticsReadRepository, riskServ
         schemaNotes: notes,
       });
     } catch (error) {
-      const message = error instanceof z.ZodError
-        ? error.errors.map((e) => e.message).join('; ')
-        : error instanceof Error ? error.message : 'Unknown error';
-      return toolErrorResult(message);
+      return toolErrorResult(formatToolError(error));
     }
   };
 }

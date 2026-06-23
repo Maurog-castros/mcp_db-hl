@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { LogisticsReadRepository } from '../repositories/LogisticsReadRepository.js';
-import { blNumberSchema, toolErrorResult, toolTextResult } from './common.js';
+import { blNumberSchema, formatToolError, toolErrorResult, toolTextResult } from './common.js';
 
 const inputSchema = z.object({
   blNumber: blNumberSchema,
@@ -26,10 +26,7 @@ export function registerGetMissingDocumentsByBl(repo: LogisticsReadRepository) {
       const { result, notes } = await repo.getMissingDocumentsByBl(input.blNumber);
       return toolTextResult({ success: true, data: result, schemaNotes: notes });
     } catch (error) {
-      const message = error instanceof z.ZodError
-        ? error.errors.map((e) => e.message).join('; ')
-        : error instanceof Error ? error.message : 'Unknown error';
-      return toolErrorResult(message);
+      return toolErrorResult(formatToolError(error));
     }
   };
 }
